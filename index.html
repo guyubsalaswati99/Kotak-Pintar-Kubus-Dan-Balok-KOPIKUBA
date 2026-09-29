@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOPI KUBA - Kotak Pintar Kubus dan Balok</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js & OrbitControls for 3D Render -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fff5f7; }
+        .canvas-container { position: relative; width: 100%; height: 420px; border-radius: 1rem; overflow: hidden; }
+        @media (max-width: 640px) { .canvas-container { height: 320px; } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #ffe4e6; }
+        ::-webkit-scrollbar-thumb { background: #f43f5e; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #be123c; }
+        .glass-card { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(10px); border: 1px solid rgba(254, 205, 211, 0.8); }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchMainTab('beranda')">
+                    <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-md flex items-center justify-center text-white shadow-inner">
+                        <i class="fa-solid font-bold fa-cube text-2xl sm:text-3xl text-pink-200"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg sm:text-2xl tracking-wide flex items-center gap-2">
+                            KOPI KUBA
+                            <span class="text-xs bg-pink-300/30 text-pink-100 px-2 py-0.5 rounded-full font-normal hidden sm:inline-block">v3.0 Pink Edition</span>
+                        </h1>
+                        <p class="text-xs text-pink-100 font-light hidden sm:block">Kotak Pintar Kubus dan Balok - Media Pembelajaran Matematika</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Menu -->
+                <nav class="hidden lg:flex space-x-1 lg:space-x-1 text-xs xl:text-sm font-medium">
+                    <button onclick="switchMainTab('beranda')" id="nav-beranda" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10 font-bold bg-white/20">Beranda</button>
+                    <button onclick="switchMainTab('petunjuk')" id="nav-petunjuk" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">Petunjuk</button>
+                    <button onclick="switchMainTab('cptp')" id="nav-cptp" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">CP & TP</button>
+                    <button onclick="switchMainTab('materi')" id="nav-materi" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">Materi Interaktif</button>
+                    <button onclick="switchMainTab('game4p')" id="nav-game4p" class="nav-btn px-2.5 py-2 rounded-lg transition bg-amber-400 text-slate-900 font-bold hover:bg-amber-300 shadow">
+                        <i class="fa-solid fa-gamepad mr-1"></i> Game 4 Pemain
+                    </button>
+                    <button onclick="switchMainTab('kuis')" id="nav-kuis" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">Kuis</button>
+                    <button onclick="switchMainTab('refleksi')" id="nav-refleksi" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">Refleksi</button>
+                    <button onclick="switchMainTab('profil')" id="nav-profil" class="nav-btn px-2.5 py-2 rounded-lg transition hover:bg-white/10">Profil</button>
+                </nav>
+
+                <!-- Mobile Navigation Toggle -->
+                <div class="lg:hidden">
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="p-2 rounded-lg text-white hover:bg-white/10 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-rose-800/95 border-t border-rose-500 px-4 pt-2 pb-4 space-y-2 text-sm">
+            <button onclick="switchMainTab('beranda')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Beranda</button>
+            <button onclick="switchMainTab('petunjuk')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Petunjuk</button>
+            <button onclick="switchMainTab('cptp')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">CP & TP</button>
+            <button onclick="switchMainTab('materi')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Materi Interaktif</button>
+            <button onclick="switchMainTab('game4p')" class="block w-full text-left px-3 py-2 rounded-md text-amber-300 font-bold hover:bg-rose-700"><i class="fa-solid fa-gamepad mr-2"></i> Game 4 Pemain Kompetisi</button>
+            <button onclick="switchMainTab('kuis')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Kuis & Latihan</button>
+            <button onclick="switchMainTab('refleksi')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Refleksi Pembelajaran</button>
+            <button onclick="switchMainTab('profil')" class="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-rose-700">Profil Pengembang</button>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow w-full">
+
+        <!-- 1. BERANDA TAB -->
+        <section id="tab-beranda" class="tab-content space-y-8">
+            <div class="bg-gradient-to-br from-rose-500 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="space-y-4 max-w-2xl z-10">
+                    <span class="bg-pink-300/30 text-pink-100 text-xs sm:text-sm font-semibold px-3 py-1 rounded-full uppercase tracking-wider inline-block border border-pink-200/30">
+                        Media Pembelajaran Digital Interaktif SD/SMP
+                    </span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight">
+                        Eksplorasi Bangun Ruang <span class="text-amber-300">Kubus & Balok</span> Lebih Seru!
+                    </h2>
+                    <p class="text-pink-100 text-sm sm:text-lg leading-relaxed font-light">
+                        Selamat datang di <strong>KOPI KUBA</strong>! Pelajari sifat bangun ruang, susun & urai kubus satuan 3D, tentukan koordinat petak jalur, mainkan game kompetisi 4 pemain, serta tulis refleksi belajarmu.
+                    </p>
+                    <div class="pt-4 flex flex-wrap gap-4">
+                        <button onclick="switchMainTab('materi')" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Mulai Belajar Materi
+                        </button>
+                        <button onclick="switchMainTab('game4p')" class="bg-white/20 hover:bg-white/30 text-white font-bold px-6 py-3.5 rounded-2xl border border-white/30 transition flex items-center gap-2">
+                            <i class="fa-solid fa-gamepad text-amber-300"></i> Mainkan Game 4 Pemain
+                        </button>
+                    </div>
+                </div>
+                <div class="relative z-10 w-full md:w-80 h-64 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col items-center justify-center text-center shadow-xl">
+                    <i class="fa-solid fa-cubes-stacked text-7xl text-amber-300 mb-3 animate-bounce"></i>
+                    <h3 class="font-bold text-lg text-white">Fitur Lengkap 3D & Game</h3>
+                    <p class="text-xs text-pink-100 mt-1">Konstruksi kubus satuan, lipatan 3D, petak jalur koordinat, dan kompetisi 4 pemain.</p>
+                </div>
+            </div>
+
+            <!-- Features Quick Overview -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div onclick="switchMainTab('materi'); switchSubTab('materi-a');" class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer border border-rose-100 hover:border-rose-300 group">
+                    <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <h3 class="font-bold text-base mb-1 text-slate-800">A. Unsur Bangun Ruang</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Visualisasi interaktif sisi, rusuk, titik sudut, diagonal bidang, dan ruang.</p>
+                </div>
+
+                <div onclick="switchMainTab('materi'); switchSubTab('materi-b');" class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer border border-rose-100 hover:border-rose-300 group">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <h3 class="font-bold text-base mb-1 text-slate-800">B. Lipatan 3D Utuh</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Simulasi animasi lambat melipat jaring-jaring kubus & balok 3D tanpa celah.</p>
+                </div>
+
+                <div onclick="switchMainTab('materi'); switchSubTab('materi-d');" class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer border border-rose-100 hover:border-rose-300 group relative">
+                    <span class="absolute top-3 right-3 bg-rose-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Baru</span>
+                    <div class="w-12 h-12 bg-pink-100 text-pink-700 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <h3 class="font-bold text-base mb-1 text-slate-800">D. Kubus Satuan 3D</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Mengonstruksi, menambah, mengurangi, dan mengurai kubus satuan interaktif.</p>
+                </div>
+
+                <div onclick="switchMainTab('materi'); switchSubTab('materi-e');" class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer border border-rose-100 hover:border-rose-300 group relative">
+                    <span class="absolute top-3 right-3 bg-rose-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Baru</span>
+                    <div class="w-12 h-12 bg-fuchsia-100 text-fuchsia-700 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <h3 class="font-bold text-base mb-1 text-slate-800">E. Petak Jalur & Koordinat</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Menentukan titik koordinat lokasi serta menghitung jumlah langkah perjalanan.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PETUNJUK TAB -->
+        <section id="tab-petunjuk" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-rose-800 flex items-center gap-3">
+                        <i class="fa-solid fa-circle-question text-rose-600"></i>
+                        Petunjuk Penggunaan Media
+                    </h2>
+                    <p class="text-slate-600 text-sm mt-1">Panduan langkah demi langkah untuk memaksimalkan penggunaan aplikasi KOPI KUBA.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-pink-50/60 p-5 rounded-2xl border border-pink-100 space-y-3">
+                        <div class="w-8 h-8 bg-rose-600 text-white rounded-full font-bold flex items-center justify-center text-sm">1</div>
+                        <h3 class="font-bold text-slate-800">Navigasi Menu</h3>
+                        <p class="text-sm text-slate-600">Gunakan bilah navigasi di bagian atas untuk berpindah antar halaman (Beranda, Petunjuk, CP/TP, Materi, Kuis, Refleksi, Profil).</p>
+                    </div>
+
+                    <div class="bg-pink-50/60 p-5 rounded-2xl border border-pink-100 space-y-3">
+                        <div class="w-8 h-8 bg-rose-600 text-white rounded-full font-bold flex items-center justify-center text-sm">2</div>
+                        <h3 class="font-bold text-slate-800">Interaksi Halaman 3D</h3>
+                        <p class="text-sm text-slate-600">Klik dan geser tetikus/layar sentuh pada viewport 3D untuk memutar sudut pandang bangun ruang dari berbagai arah.</p>
+                    </div>
+
+                    <div class="bg-amber-50/60 p-5 rounded-2xl border border-amber-200 space-y-3">
+                        <div class="w-8 h-8 bg-amber-600 text-white rounded-full font-bold flex items-center justify-center text-sm">3</div>
+                        <h3 class="font-bold text-slate-800">Simulasi Lipatan 3D Utuh</h3>
+                        <p class="text-sm text-slate-600">Di menu <strong>Materi B</strong>, pilih antara <strong>Kubus</strong> atau <strong>Balok</strong>, sesuaikan ukuran dimensi balok, dan geser slider untuk melihat lipatan jaring-jaring 3D secara presisi.</p>
+                    </div>
+
+                    <div class="bg-sky-50/60 p-5 rounded-2xl border border-sky-100 space-y-3">
+                        <div class="w-8 h-8 bg-sky-600 text-white rounded-full font-bold flex items-center justify-center text-sm">4</div>
+                        <h3 class="font-bold text-slate-800">Konstruksi Kubus Satuan</h3>
+                        <p class="text-sm text-slate-600">Di <strong>Materi D</strong>, tambah / kurangi kubus satuan dan gunakan fitur <strong>"Urai / Beri Celah"</strong> untuk memahami konsep volume secara visual.</p>
+                    </div>
+
+                    <div class="bg-indigo-50/60 p-5 rounded-2xl border border-indigo-100 space-y-3">
+                        <div class="w-8 h-8 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center text-sm">5</div>
+                        <h3 class="font-bold text-slate-800">Game 4 Pemain Kompetisi</h3>
+                        <p class="text-sm text-slate-600">Mainkan game bersama 4 siswa dalam 1 layar secara bersamaan untuk adu cepat dan tepat menjawab soal matematika.</p>
+                    </div>
+
+                    <div class="bg-pink-50/60 p-5 rounded-2xl border border-pink-100 space-y-3">
+                        <div class="w-8 h-8 bg-rose-600 text-white rounded-full font-bold flex items-center justify-center text-sm">6</div>
+                        <h3 class="font-bold text-slate-800">Refleksi Pembelajaran</h3>
+                        <p class="text-sm text-slate-600">Ungkapkan perasaan dan hal yang kamu pelajari melalui fitur Refleksi interaktif di akhir pembelajaran.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CP & TP TAB -->
+        <section id="tab-cptp" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-rose-800 flex items-center gap-3">
+                        <i class="fa-solid fa-bullseye text-rose-600"></i>
+                        Capaian & Tujuan Pembelajaran
+                    </h2>
+                    <p class="text-slate-600 text-sm mt-1">Landasan kurikulum dan indikator keberhasilan pembelajaran matematika.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CP Card -->
+                    <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 p-6 rounded-2xl space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center text-lg font-bold">
+                                CP
+                            </div>
+                            <h3 class="font-bold text-rose-900 text-lg">Capaian Pembelajaran (CP)</h3>
+                        </div>
+                        <p class="text-slate-700 text-sm leading-relaxed">
+                            Pada akhir Fase C / Kurikulum Merdeka, peserta didik mampu mengkonstruksi dan mengurai bangun ruang (kubus, balok, dan gabungannya) dan mengenali visualisasi spasial jaring-jaring bangun ruang kubus dan balok. Peserta didik dapat mengukur panjang, luas permukaan, dan volume bangun ruang dengan menggunakan satuan baku.
+                        </p>
+                    </div>
+
+                    <!-- TP Card -->
+                    <div class="bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-200 p-6 rounded-2xl space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-sky-600 text-white rounded-xl flex items-center justify-center text-lg font-bold">
+                                TP
+                            </div>
+                            <h3 class="font-bold text-sky-900 text-lg">Tujuan Pembelajaran (TP)</h3>
+                        </div>
+                        <ul class="space-y-2 text-slate-700 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-sky-600 mt-1"></i>
+                                <span>Mengidentifikasi unsur-unsur kubus dan balok (sisi, rusuk, titik sudut, diagonal) dengan tepat.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-sky-600 mt-1"></i>
+                                <span>Menganalisis berbagai pola jaring-jaring kubus dan balok melalui simulasi folding 3D utuh.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-sky-600 mt-1"></i>
+                                <span>Mengonstruksi dan mengurai susunan kubus satuan 3D serta menentukan titik koordinat petak jalur.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. MATERI INTERAKTIF TAB -->
+        <section id="tab-materi" class="tab-content hidden space-y-6">
+            <!-- Subtab Navigation Bar -->
+            <div class="bg-white rounded-2xl p-2 shadow-sm border border-slate-200 flex flex-wrap gap-2 text-xs sm:text-sm font-semibold">
+                <button id="subtab-materi-a" onclick="switchSubTab('materi-a')" class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 bg-rose-600 text-white shadow-sm">
+                    <i class="fa-solid fa-cubes"></i> A. Unsur Bangun
+                </button>
+                <button id="subtab-materi-b" onclick="switchSubTab('materi-b')" class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-box-open"></i> B. Lipatan 3D Utuh
+                </button>
+                <button id="subtab-materi-c" onclick="switchSubTab('materi-c')" class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-calculator"></i> C. Rumus & Kalkulator
+                </button>
+                <button id="subtab-materi-d" onclick="switchSubTab('materi-d')" class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-cubes-stacked"></i> D. Kubus Satuan 3D
+                </button>
+                <button id="subtab-materi-e" onclick="switchSubTab('materi-e')" class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-map-location-dot"></i> E. Petak Jalur & Koordinat
+                </button>
+            </div>
+
+            <!-- SUBTAB A: Pengertian & Unsur-unsur -->
+            <div id="subcontent-materi-a" class="subtab-content space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">Unsur-Unsur Bangun Ruang</h3>
+                            <p class="text-xs sm:text-sm text-slate-500">Pilih jenis bangun ruang dan klik tombol unsur untuk menyorot bagian pada tampilan 3D.</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                            <button id="unsur-shape-kubus" onclick="setUnsurShape('kubus')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow">Kubus</button>
+                            <button id="unsur-shape-balok" onclick="setUnsurShape('balok')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200">Balok</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- 3D Canvas Viewport -->
+                        <div class="lg:col-span-7 bg-slate-900 rounded-2xl p-2 relative shadow-inner overflow-hidden">
+                            <div id="canvas-unsur-container" class="canvas-container"></div>
+                            <div class="absolute top-4 left-4 bg-slate-800/80 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-arrows-spin text-rose-400"></i> Putar pandangan dengan tetikus / sentuhan
+                            </div>
+                        </div>
+
+                        <!-- Unsur Selection Controls -->
+                        <div class="lg:col-span-5 space-y-4">
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pilih Unsur Yang Ingin Ditampilkan:</h4>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="highlightUnsur('sisi')" class="unsur-btn p-3 rounded-xl border border-slate-200 text-left hover:border-rose-500 hover:bg-rose-50 transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-vector-square text-rose-600 mr-2"></i> Sisi (6)</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="highlightUnsur('rusuk')" class="unsur-btn p-3 rounded-xl border border-slate-200 text-left hover:border-rose-500 hover:bg-rose-50 transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-slash text-sky-600 mr-2"></i> Rusuk (12)</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="highlightUnsur('titik')" class="unsur-btn p-3 rounded-xl border border-slate-200 text-left hover:border-rose-500 hover:bg-rose-50 transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-circle text-amber-500 mr-2"></i> Titik Sudut (8)</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="highlightUnsur('diag-bidang')" class="unsur-btn p-3 rounded-xl border border-slate-200 text-left hover:border-rose-500 hover:bg-rose-50 transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-xmark text-emerald-600 mr-2"></i> Diag. Bidang (12)</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="highlightUnsur('diag-ruang')" class="unsur-btn p-3 rounded-xl border border-slate-200 text-left hover:border-rose-500 hover:bg-rose-50 transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-expand text-purple-600 mr-2"></i> Diag. Ruang (4)</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="highlightUnsur('semua')" class="unsur-btn p-3 rounded-xl border border-rose-500 bg-rose-50 text-left transition font-semibold text-xs sm:text-sm flex items-center justify-between">
+                                    <span><i class="fa-solid fa-eye text-rose-700 mr-2"></i> Tampilkan Semua</span>
+                                    <i class="fa-solid fa-check text-xs text-rose-600"></i>
+                                </button>
+                            </div>
+
+                            <div id="unsur-info-card" class="bg-rose-50/80 p-4 rounded-xl border border-rose-200 space-y-2">
+                                <h5 id="unsur-info-title" class="font-bold text-rose-900 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-info-circle text-rose-600"></i> Sisi Bangun Ruang
+                                </h5>
+                                <p id="unsur-info-desc" class="text-xs text-slate-700 leading-relaxed">
+                                    Sisi adalah bidang datar yang membatasi bagian dalam dan luar bangun ruang. Baik Kubus maupun Balok memiliki total 6 bidang sisi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB B: Lipatan 3D Utuh (Jaring-Jaring Kubus & Balok) -->
+            <div id="subcontent-materi-b" class="subtab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">Lipatan 3D Utuh (Kubus & Balok)</h3>
+                            <p class="text-xs sm:text-sm text-slate-500">Pilih bentuk bangun ruang 3D, atur ukuran dimensi, dan geser slider untuk mensimulasikan proses melipat jaring-jaring tanpa celah.</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                            <button id="lipatan-shape-kubus" onclick="setLipatanShape('kubus')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow">Kubus 3D</button>
+                            <button id="lipatan-shape-balok" onclick="setLipatanShape('balok')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200">Balok 3D</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- 3D Canvas Viewport for Folding Net -->
+                        <div class="lg:col-span-7 bg-slate-900 rounded-2xl p-2 relative shadow-inner overflow-hidden">
+                            <div id="canvas-lipatan-container" class="canvas-container"></div>
+                            <div class="absolute top-4 left-4 bg-slate-800/80 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                                <span id="badge-lipatan-type" class="bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">BALOK 3D</span>
+                                <span>Putar 3D untuk melihat sudut lipatan</span>
+                            </div>
+                        </div>
+
+                        <!-- Folding Controls Panel -->
+                        <div class="lg:col-span-5 space-y-5">
+                            <!-- Pattern Selector -->
+                            <div>
+                                <label class="block font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Pilih Pola Jaring-Jaring 3D:</label>
+                                <div class="grid grid-cols-3 gap-2" id="pattern-buttons-container">
+                                    <button onclick="setLipatanPattern(0)" id="pola-btn-0" class="pola-btn p-2.5 rounded-xl border border-rose-500 bg-rose-50 text-rose-700 font-bold text-xs transition">Pola 1 (Standard)</button>
+                                    <button onclick="setLipatanPattern(1)" id="pola-btn-1" class="pola-btn p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs transition hover:bg-slate-50">Pola 2 (Samping)</button>
+                                    <button onclick="setLipatanPattern(2)" id="pola-btn-2" class="pola-btn p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs transition hover:bg-slate-50">Pola 3 (T-Shape)</button>
+                                </div>
+                            </div>
+
+                            <!-- Dimension Controls for Balok -->
+                            <div id="balok-dimensions-box" class="bg-rose-50/60 p-4 rounded-xl border border-rose-200 space-y-3">
+                                <h5 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center justify-between">
+                                    <span><i class="fa-solid fa-sliders text-rose-600 mr-1.5"></i> Dimensi Balok (P x L x T)</span>
+                                    <span id="balok-dim-label" class="text-rose-700 font-extrabold text-sm">3.0 x 2.0 x 1.5</span>
+                                </h5>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <span class="text-[11px] font-semibold text-slate-600">Panjang (p):</span>
+                                        <input type="range" id="input-balok-p" min="1.5" max="4.0" step="0.5" value="3.0" oninput="updateBalokDimensions()" class="w-full accent-rose-600 cursor-pointer">
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-semibold text-slate-600">Lebar (l):</span>
+                                        <input type="range" id="input-balok-l" min="1.0" max="3.0" step="0.5" value="2.0" oninput="updateBalokDimensions()" class="w-full accent-rose-600 cursor-pointer">
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-semibold text-slate-600">Tinggi (t):</span>
+                                        <input type="range" id="input-balok-t" min="1.0" max="2.5" step="0.5" value="1.5" oninput="updateBalokDimensions()" class="w-full accent-rose-600 cursor-pointer">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Folding Slider & Animation Controls -->
+                            <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div class="flex items-center justify-between">
+                                    <label for="fold-slider" class="font-bold text-slate-800 text-xs uppercase tracking-wider">Tingkat Lipatan 3D:</label>
+                                    <span id="fold-percent-label" class="font-extrabold text-rose-600 text-base">0% (Datar)</span>
+                                </div>
+                                <input type="range" id="fold-slider" min="0" max="100" value="0" oninput="onFoldSliderChange(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+
+                                <div class="flex items-center justify-between gap-2 pt-1">
+                                    <button id="btn-play-fold" onclick="toggleAutoFold()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-4 rounded-xl shadow transition text-xs sm:text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-play"></i> Lipat Lambat
+                                    </button>
+                                    <button onclick="resetFold()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 px-4 rounded-xl transition text-xs sm:text-sm flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Informational Box -->
+                            <div id="lipatan-info-box" class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                                <p class="font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-lightbulb text-amber-600"></i> Penjelasan Pasangan Sisi Balok:
+                                </p>
+                                <p class="leading-relaxed">
+                                    Jaring-jaring balok terdiri dari 3 pasang persegi panjang yang kongruen: <strong>Alas & Tutup</strong> (p x l), <strong>Depan & Belakang</strong> (p x t), serta <strong>Kiri & Kanan</strong> (l x t). Saat dilipat 100%, semua sisi bertemu secara tepat membentuk Bangun Ruang Balok 3D Utuh.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB C: Rumus & Kalkulator Interaktif -->
+            <div id="subcontent-materi-c" class="subtab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Kubus Formula & Calc -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+                        <div class="flex items-center gap-3 border-b border-rose-100 pb-3">
+                            <div class="w-10 h-10 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-cube"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">Rumus & Kalkulator Kubus</h3>
+                                <p class="text-xs text-slate-500">Panjang rusuk sama (s)</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-rose-50/50 p-4 rounded-xl space-y-2 border border-rose-100 text-xs">
+                            <p><strong>Volume (V):</strong> <code class="bg-white px-2 py-0.5 rounded text-rose-700 font-bold">V = s x s x s = s³</code></p>
+                            <p><strong>Luas Permukaan (LP):</strong> <code class="bg-white px-2 py-0.5 rounded text-rose-700 font-bold">LP = 6 x s²</code></p>
+                        </div>
+
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Hitung Kubus:</label>
+                            <div>
+                                <span class="text-xs text-slate-600">Panjang Sisi (s) dalam cm:</span>
+                                <input type="number" id="calc-kubus-s" value="5" min="1" oninput="calculateKubus()" class="w-full mt-1 p-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                            </div>
+                            <div id="res-kubus-box" class="bg-slate-900 text-white p-4 rounded-xl text-xs space-y-1 font-mono">
+                                <p class="text-amber-300 font-bold">Hasil Perhitungan Kubus:</p>
+                                <p>Volume = 5 x 5 x 5 = <strong>125 cm³</strong></p>
+                                <p>Luas Permukaan = 6 x (5²) = <strong>150 cm²</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balok Formula & Calc -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+                        <div class="flex items-center gap-3 border-b border-sky-100 pb-3">
+                            <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-box"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">Rumus & Kalkulator Balok</h3>
+                                <p class="text-xs text-slate-500">Panjang (p), Lebar (l), Tinggi (t)</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-sky-50/50 p-4 rounded-xl space-y-2 border border-sky-100 text-xs">
+                            <p><strong>Volume (V):</strong> <code class="bg-white px-2 py-0.5 rounded text-sky-700 font-bold">V = p x l x t</code></p>
+                            <p><strong>Luas Permukaan (LP):</strong> <code class="bg-white px-2 py-0.5 rounded text-sky-700 font-bold">LP = 2 x (p·l + p·t + l·t)</code></p>
+                        </div>
+
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Hitung Balok:</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <span class="text-[11px] text-slate-600">Panjang (p):</span>
+                                    <input type="number" id="calc-balok-p" value="6" min="1" oninput="calculateBalok()" class="w-full mt-1 p-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-slate-600">Lebar (l):</span>
+                                    <input type="number" id="calc-balok-l" value="4" min="1" oninput="calculateBalok()" class="w-full mt-1 p-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-slate-600">Tinggi (t):</span>
+                                    <input type="number" id="calc-balok-t" value="3" min="1" oninput="calculateBalok()" class="w-full mt-1 p-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                </div>
+                            </div>
+                            <div id="res-balok-box" class="bg-slate-900 text-white p-4 rounded-xl text-xs space-y-1 font-mono">
+                                <p class="text-amber-300 font-bold">Hasil Perhitungan Balok:</p>
+                                <p>Volume = 6 x 4 x 3 = <strong>72 cm³</strong></p>
+                                <p>Luas Permukaan = 2 x (24 + 18 + 12) = <strong>108 cm²</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB D: Kubus Satuan 3D -->
+            <div id="subcontent-materi-d" class="subtab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">Konstruksi Kubus Satuan 3D</h3>
+                            <p class="text-xs sm:text-sm text-slate-500">Susun dan urai kubus satuan untuk memahami hubungan antara dimensi (P x L x T) dengan total volume.</p>
+                        </div>
+                        <div class="bg-rose-100 text-rose-800 px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-cubes text-rose-600"></i> Total Kubus Satuan = <span id="total-unit-cubes-label" class="text-base text-rose-900 font-extrabold">24</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <div class="lg:col-span-7 bg-slate-900 rounded-2xl p-2 relative shadow-inner overflow-hidden">
+                            <div id="canvas-kubus-satuan-container" class="canvas-container"></div>
+                            <div class="absolute top-4 left-4 bg-slate-800/80 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-arrows-spin text-rose-400"></i> Geser layar untuk memutar 3D
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 space-y-5">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Atur Jumlah Kubus Satuan:</h4>
+                                <div>
+                                    <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                                        <span>Panjang (P):</span>
+                                        <span id="val-unit-p">4</span>
+                                    </div>
+                                    <input type="range" id="unit-p" min="1" max="5" value="4" oninput="updateUnitCubes()" class="w-full accent-rose-600 cursor-pointer">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                                        <span>Lebar (L):</span>
+                                        <span id="val-unit-l">3</span>
+                                    </div>
+                                    <input type="range" id="unit-l" min="1" max="5" value="3" oninput="updateUnitCubes()" class="w-full accent-rose-600 cursor-pointer">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                                        <span>Tinggi (T):</span>
+                                        <span id="val-unit-t">2</span>
+                                    </div>
+                                    <input type="range" id="unit-t" min="1" max="5" value="2" oninput="updateUnitCubes()" class="w-full accent-rose-600 cursor-pointer">
+                                </div>
+                            </div>
+
+                            <div class="bg-pink-50 p-4 rounded-xl border border-pink-200 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="font-bold text-slate-800 text-xs uppercase tracking-wider">Urai / Beri Celah 3D:</label>
+                                    <span id="gap-percent-label" class="font-bold text-rose-600 text-xs">0%</span>
+                                </div>
+                                <input type="range" id="gap-slider" min="0" max="100" value="0" oninput="updateCubeGaps(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                                <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    Geser slider di atas untuk memberi jarak antar kubus satuan agar kamu dapat memverifikasi dan menghitung tiap lapis secara terpisah.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB E: Petak Jalur & Koordinat -->
+            <div id="subcontent-materi-e" class="subtab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <h3 class="text-xl font-bold text-slate-800">Petak Jalur & Koordinat Lokasi</h3>
+                        <p class="text-xs sm:text-sm text-slate-500">Tentukan titik awal dan lokasi tujuan pada petak bidang untuk menghitung jumlah langkah perjalanan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- 2D Interactive Grid Map -->
+                        <div class="lg:col-span-7 bg-rose-50/50 p-4 rounded-2xl border border-rose-200 flex flex-col items-center">
+                            <div id="grid-map-container" class="grid grid-cols-8 gap-1 bg-white p-3 rounded-xl shadow border border-rose-200 w-full max-w-md aspect-square">
+                                <!-- Grid cells generated via JavaScript -->
+                            </div>
+                            <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-slate-700">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-house text-rose-600"></i> Rumah (2, 2)</span>
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-school text-sky-600"></i> Sekolah (6, 6)</span>
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-tree text-emerald-600"></i> Taman (2, 6)</span>
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-store text-amber-600"></i> Toko (6, 2)</span>
+                            </div>
+                        </div>
+
+                        <!-- Route Controls -->
+                        <div class="lg:col-span-5 space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Simulasi Rute Perjalanan:</h4>
+                                <div>
+                                    <label class="text-xs text-slate-600 font-semibold">Titik Keberangkatan (Awal):</label>
+                                    <select id="select-start-pos" onchange="calculateRoutePath()" class="w-full mt-1 p-2 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-rose-500">
+                                        <option value="rumah">Rumah (2, 2)</option>
+                                        <option value="taman">Taman (2, 6)</option>
+                                        <option value="toko">Toko (6, 2)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-600 font-semibold">Tujuan (Akhir):</label>
+                                    <select id="select-end-pos" onchange="calculateRoutePath()" class="w-full mt-1 p-2 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-rose-500">
+                                        <option value="sekolah" selected>Sekolah (6, 6)</option>
+                                        <option value="toko">Toko (6, 2)</option>
+                                        <option value="taman">Taman (2, 6)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="route-result-card" class="bg-rose-50 p-4 rounded-xl border border-rose-200 space-y-2 text-xs">
+                                <h5 class="font-bold text-rose-900 text-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-route text-rose-600"></i> Rincian Perjalanan
+                                </h5>
+                                <p id="route-steps-desc" class="text-slate-700 leading-relaxed">
+                                    Dari Rumah (2, 2) menuju Sekolah (6, 6):<br>
+                                    • Langkah Horisontal: 4 petak ke Kanan (Timur)<br>
+                                    • Langkah Vertikal: 4 petak ke Atas (Utara)<br>
+                                    <strong>Total Jarak Perjalanan = 8 Langkah Petak.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. GAME 4 PEMAIN TAB -->
+        <section id="tab-game4p" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-amber-600 flex items-center gap-3">
+                            <i class="fa-solid fa-gamepad text-amber-500"></i>
+                            Game Kompetisi 4 Pemain
+                        </h2>
+                        <p class="text-slate-600 text-sm mt-1">Adu cepat dan tepat menjawab pertanyaan seputar Kubus & Balok dalam 1 layar bersama temanmu!</p>
+                    </div>
+                    <button onclick="startNewGame4P()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold px-5 py-2.5 rounded-xl shadow transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-rotate-right"></i> Game Baru
+                    </button>
+                </div>
+
+                <!-- Scores Header Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-rose-50 border-2 border-rose-400 p-3 rounded-xl text-center">
+                        <span class="text-xs font-bold text-rose-700 block">Pemain 1 (Merah)</span>
+                        <span id="score-p1" class="text-2xl font-black text-rose-900">0</span>
+                    </div>
+                    <div class="bg-sky-50 border-2 border-sky-400 p-3 rounded-xl text-center">
+                        <span class="text-xs font-bold text-sky-700 block">Pemain 2 (Biru)</span>
+                        <span id="score-p2" class="text-2xl font-black text-sky-900">0</span>
+                    </div>
+                    <div class="bg-emerald-50 border-2 border-emerald-400 p-3 rounded-xl text-center">
+                        <span class="text-xs font-bold text-emerald-700 block">Pemain 3 (Hijau)</span>
+                        <span id="score-p3" class="text-2xl font-black text-emerald-900">0</span>
+                    </div>
+                    <div class="bg-amber-50 border-2 border-amber-400 p-3 rounded-xl text-center">
+                        <span class="text-xs font-bold text-amber-700 block">Pemain 4 (Kuning)</span>
+                        <span id="score-p4" class="text-2xl font-black text-amber-900">0</span>
+                    </div>
+                </div>
+
+                <!-- Game Active Question Box -->
+                <div id="game-question-box" class="bg-slate-900 text-white p-6 rounded-2xl space-y-4 text-center shadow-lg relative overflow-hidden">
+                    <span id="game-q-number" class="bg-amber-400 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Soal 1 / 5</span>
+                    <h3 id="game-q-text" class="text-lg sm:text-2xl font-bold leading-snug">
+                        Berapakah jumlah rusuk pada bangun ruang Kubus maupun Balok?
+                    </h3>
+                </div>
+
+                <!-- 4 Players Buzz-In Answer Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- P1 Panel -->
+                    <div class="bg-rose-50 p-4 rounded-2xl border-2 border-rose-300 space-y-3">
+                        <h4 class="font-bold text-rose-800 text-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-user-ninja mr-1"></i> Pemain 1 (Merah)</span>
+                            <span class="text-xs bg-rose-200 text-rose-800 px-2 py-0.5 rounded">P1</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2" id="p1-answers-box">
+                            <!-- Answer buttons dynamically rendered -->
+                        </div>
+                    </div>
+
+                    <!-- P2 Panel -->
+                    <div class="bg-sky-50 p-4 rounded-2xl border-2 border-sky-300 space-y-3">
+                        <h4 class="font-bold text-sky-800 text-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-user-ninja mr-1"></i> Pemain 2 (Biru)</span>
+                            <span class="text-xs bg-sky-200 text-sky-800 px-2 py-0.5 rounded">P2</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2" id="p2-answers-box">
+                            <!-- Answer buttons dynamically rendered -->
+                        </div>
+                    </div>
+
+                    <!-- P3 Panel -->
+                    <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-300 space-y-3">
+                        <h4 class="font-bold text-emerald-800 text-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-user-ninja mr-1"></i> Pemain 3 (Hijau)</span>
+                            <span class="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded">P3</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2" id="p3-answers-box">
+                            <!-- Answer buttons dynamically rendered -->
+                        </div>
+                    </div>
+
+                    <!-- P4 Panel -->
+                    <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 space-y-3">
+                        <h4 class="font-bold text-amber-800 text-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-user-ninja mr-1"></i> Pemain 4 (Kuning)</span>
+                            <span class="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">P4</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2" id="p4-answers-box">
+                            <!-- Answer buttons dynamically rendered -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. KUIS TAB -->
+        <section id="tab-kuis" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b border-slate-200 pb-4 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-rose-800 flex items-center gap-3">
+                            <i class="fa-solid fa-file-pen text-rose-600"></i>
+                            Kuis & Evaluasi Mandiri
+                        </h2>
+                        <p class="text-slate-600 text-sm mt-1">Uji pemahamanmu tentang materi Kubus dan Balok secara interaktif.</p>
+                    </div>
+                    <button onclick="resetQuiz()" class="text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Kuis
+                    </button>
+                </div>
+
+                <div id="quiz-container" class="space-y-6">
+                    <!-- Quiz questions injected via JS -->
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button onclick="submitQuiz()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition">
+                        Submit Jawaban & Lihat Skor
+                    </button>
+                </div>
+
+                <!-- Quiz Result Box -->
+                <div id="quiz-result-modal" class="hidden bg-slate-900 text-white p-6 rounded-2xl space-y-3">
+                    <h3 class="text-xl font-bold text-amber-300">Hasil Kuis Mandiri</h3>
+                    <p id="quiz-score-text" class="text-base">Skor Kamu: 100 / 100</p>
+                    <p id="quiz-feedback-text" class="text-xs text-slate-300">Luar biasa! Kamu telah menguasai seluruh konsep Kubus dan Balok dengan sempurna.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. REFLEKSI TAB -->
+        <section id="tab-refleksi" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-rose-800 flex items-center gap-3">
+                        <i class="fa-solid fa-heart text-rose-600"></i>
+                        Refleksi Pembelajaran
+                    </h2>
+                    <p class="text-slate-600 text-sm mt-1">Bagikan pengalaman dan perasaanmu setelah mempelajari materi ini.</p>
+                </div>
+
+                <form onsubmit="saveReflection(event)" class="space-y-5 max-w-2xl">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Bagaimana perasaanmu setelah belajar hari ini?</label>
+                        <div class="flex gap-4">
+                            <label class="cursor-pointer flex flex-col items-center p-3 rounded-xl border border-slate-200 hover:border-rose-500 transition">
+                                <input type="radio" name="feeling" value="Sangat Senang" checked class="accent-rose-600">
+                                <span class="text-2xl mt-1">🤩</span>
+                                <span class="text-xs font-semibold mt-1">Sangat Senang</span>
+                            </label>
+                            <label class="cursor-pointer flex flex-col items-center p-3 rounded-xl border border-slate-200 hover:border-rose-500 transition">
+                                <input type="radio" name="feeling" value="Paham" class="accent-rose-600">
+                                <span class="text-2xl mt-1">😊</span>
+                                <span class="text-xs font-semibold mt-1">Paham</span>
+                            </label>
+                            <label class="cursor-pointer flex flex-col items-center p-3 rounded-xl border border-slate-200 hover:border-rose-500 transition">
+                                <input type="radio" name="feeling" value="Perlu Berlatih" class="accent-rose-600">
+                                <span class="text-2xl mt-1">🤔</span>
+                                <span class="text-xs font-semibold mt-1">Perlu Berlatih</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="refl-notes" class="block text-sm font-bold text-slate-800 mb-2">Hal baru apa yang paling menarik bagi kamu?</label>
+                        <textarea id="refl-notes" rows="3" placeholder="Tuliskan pendapatmu di sini..." class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
+                        Simpan Refleksi Saya
+                    </button>
+                </form>
+
+                <div id="reflection-summary" class="hidden bg-rose-50 p-4 rounded-xl border border-rose-200 space-y-2 text-xs">
+                    <h4 class="font-bold text-rose-900 text-sm">Catatan Refleksi Tersimpan:</h4>
+                    <p id="saved-refl-text" class="text-slate-700"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. PROFIL TAB -->
+        <section id="tab-profil" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-rose-800 flex items-center gap-3">
+                        <i class="fa-solid fa-address-card text-rose-600"></i>
+                        Profil Pengembang
+                    </h2>
+                    <p class="text-slate-600 text-sm mt-1">Informasi pengembang media interaktif KOPI KUBA.</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-rose-50 to-pink-50 p-6 rounded-2xl border border-rose-200">
+                    <div class="w-24 h-24 bg-rose-600 text-white rounded-full flex items-center justify-center text-4xl shadow-lg font-bold">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div class="space-y-2 text-center sm:text-left">
+                        <h3 class="text-xl font-bold text-slate-800">Tim Pengembang KOPI KUBA</h3>
+                        <p class="text-xs text-rose-700 font-semibold">Media Pembelajaran Digital Matematika v3.0 Pink Edition</p>
+                        <p class="text-xs text-slate-600 max-w-xl leading-relaxed">
+                            Aplikasi interaktif ini dirancang khusus untuk memfasilitasi pembelajaran matematika topik bangun ruang (Kubus dan Balok) secara konseptual, visual 3D, serta menyenangkan melalui pengalaman gamifikasi multiplayer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-rose-900 text-pink-200 text-xs py-6 border-t border-rose-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="font-semibold">&copy; 2026 KOPI KUBA - Kotak Pintar Kubus dan Balok Interaktif.</p>
+            <p class="text-pink-300/80">Dikembangkan untuk mendukung pembelajaran matematika digital yang menyenangkan dan inovatif.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Engine -->
+    <script>
+        // Global Navigation State
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/20', 'font-bold');
+            });
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav && !activeNav.classList.contains('bg-amber-400')) {
+                activeNav.classList.add('bg-white/20', 'font-bold');
+            }
+
+            // Trigger resize for Three.js canvases when entering Materi tab
+            if (tabId === 'materi') {
+                setTimeout(() => {
+                    onWindowResizeUnsur();
+                    onWindowResizeLipatan();
+                    onWindowResizeKubusSatuan();
+                }, 100);
+            }
+        }
+
+        function switchSubTab(subId) {
+            document.querySelectorAll('.subtab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`subcontent-${subId}`).classList.remove('hidden');
+
+            document.querySelectorAll('[id^="subtab-materi-"]').forEach(btn => {
+                btn.className = 'px-3.5 py-2 rounded-xl transition flex items-center gap-2 text-slate-600 hover:bg-slate-100';
+            });
+            const activeSubBtn = document.getElementById(`subtab-${subId}`);
+            if (activeSubBtn) {
+                activeSubBtn.className = 'px-3.5 py-2 rounded-xl transition flex items-center gap-2 bg-rose-600 text-white shadow-sm font-bold';
+            }
+
+            // Trigger 3D canvas resize updates
+            setTimeout(() => {
+                if (subId === 'materi-a') onWindowResizeUnsur();
+                if (subId === 'materi-b') onWindowResizeLipatan();
+                if (subId === 'materi-d') onWindowResizeKubusSatuan();
+            }, 100);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- 1. THREE.JS SCENE: UNSUR BANGUN RUANG ---
+        let sceneUnsur, cameraUnsur, rendererUnsur, controlsUnsur;
+        let meshUnsurShape, wireframeUnsur, highlightGroup;
+        let currentUnsurShape = 'kubus';
+
+        function initUnsurScene() {
+            const container = document.getElementById('canvas-unsur-container');
+            if (!container) return;
+
+            sceneUnsur = new THREE.Scene();
+            sceneUnsur.background = new THREE.Color(0x0f172a);
+
+            cameraUnsur = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            cameraUnsur.position.set(4, 3, 5);
+
+            rendererUnsur = new THREE.WebGLRenderer({ antialias: true });
+            rendererUnsur.setSize(container.clientWidth, container.clientHeight);
+            rendererUnsur.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(rendererUnsur.domElement);
+
+            controlsUnsur = new THREE.OrbitControls(cameraUnsur, rendererUnsur.domElement);
+            controlsUnsur.enableDamping = true;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            sceneUnsur.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7);
+            sceneUnsur.add(dirLight);
+
+            highlightGroup = new THREE.Group();
+            sceneUnsur.add(highlightGroup);
+
+            buildUnsurMesh();
+            animateUnsur();
+
+            window.addEventListener('resize', onWindowResizeUnsur);
+        }
+
+        function buildUnsurMesh() {
+            if (meshUnsurShape) sceneUnsur.remove(meshUnsurShape);
+            if (wireframeUnsur) sceneUnsur.remove(wireframeUnsur);
+
+            let geo;
+            if (currentUnsurShape === 'kubus') {
+                geo = new THREE.BoxGeometry(2, 2, 2);
+            } else {
+                geo = new THREE.BoxGeometry(3, 2, 1.5);
+            }
+
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0xf43f5e,
+                transparent: true,
+                opacity: 0.45,
+                roughness: 0.2
+            });
+
+            meshUnsurShape = new THREE.Mesh(geo, mat);
+            sceneUnsur.add(meshUnsurShape);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            wireframeUnsur = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
+            sceneUnsur.add(wireframeUnsur);
+
+            highlightUnsur('semua');
+        }
+
+        function setUnsurShape(shape) {
+            currentUnsurShape = shape;
+            document.getElementById('unsur-shape-kubus').className = shape === 'kubus' ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200';
+            document.getElementById('unsur-shape-balok').className = shape === 'balok' ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200';
+            buildUnsurMesh();
+        }
+
+        function highlightUnsur(type) {
+            while (highlightGroup.children.length > 0) {
+                highlightGroup.remove(highlightGroup.children[0]);
+            }
+
+            const isKubus = currentUnsurShape === 'kubus';
+            const dx = isKubus ? 1 : 1.5;
+            const dy = 1;
+            const dz = isKubus ? 1 : 0.75;
+
+            const titleEl = document.getElementById('unsur-info-title');
+            const descEl = document.getElementById('unsur-info-desc');
+
+            if (type === 'sisi') {
+                titleEl.innerHTML = '<i class="fa-solid fa-vector-square text-rose-600"></i> Bidang Sisi (6)';
+                descEl.innerText = `Memiliki 6 bidang sisi berbentuk ${isKubus ? 'persegi kongruen' : 'persegi panjang berpasangan'}.`;
+            } else if (type === 'rusuk') {
+                titleEl.innerHTML = '<i class="fa-solid fa-slash text-sky-600"></i> Rusuk Bangun (12)';
+                descEl.innerText = 'Memiliki 12 garis rusuk tempat ditemukannya dua bidang sisi.';
+            } else if (type === 'titik') {
+                titleEl.innerHTML = '<i class="fa-solid fa-circle text-amber-500"></i> Titik Sudut (8)';
+                descEl.innerText = 'Memiliki 8 titik pertemuan dari tiga rusuk bangun ruang.';
+                const sphereGeo = new THREE.SphereGeometry(0.12, 16, 16);
+                const sphereMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+                [[-dx, -dy, -dz], [dx, -dy, -dz], [dx, dy, -dz], [-dx, dy, -dz],
+                 [-dx, -dy, dz], [dx, -dy, dz], [dx, dy, dz], [-dx, dy, dz]].forEach(pos => {
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.position.set(...pos);
+                    highlightGroup.add(sphere);
+                });
+            } else if (type === 'diag-bidang') {
+                titleEl.innerHTML = '<i class="fa-solid fa-xmark text-emerald-600"></i> Diagonal Bidang (12)';
+                descEl.innerText = 'Garis hubung antara dua titik sudut berseberangan pada bidang sisi yang sama.';
+            } else if (type === 'diag-ruang') {
+                titleEl.innerHTML = '<i class="fa-solid fa-expand text-purple-600"></i> Diagonal Ruang (4)';
+                descEl.innerText = 'Garis hubung antara dua titik sudut berseberangan yang melintasi bagian dalam ruang.';
+            } else {
+                titleEl.innerHTML = '<i class="fa-solid fa-eye text-rose-600"></i> Semua Unsur Bangun Ruang';
+                descEl.innerText = 'Menampilkan seluruh struktur bidang sisi, rusuk, dan titik sudut secara bersamaan.';
+            }
+        }
+
+        function animateUnsur() {
+            requestAnimationFrame(animateUnsur);
+            if (controlsUnsur) controlsUnsur.update();
+            if (rendererUnsur && sceneUnsur && cameraUnsur) rendererUnsur.render(sceneUnsur, cameraUnsur);
+        }
+
+        function onWindowResizeUnsur() {
+            const container = document.getElementById('canvas-unsur-container');
+            if (!container || !rendererUnsur) return;
+            cameraUnsur.aspect = container.clientWidth / container.clientHeight;
+            cameraUnsur.updateProjectionMatrix();
+            rendererUnsur.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- 2. THREE.JS SCENE: LIPATAN 3D UTUH (KUBUS & BALOK) ---
+        let sceneLipatan, cameraLipatan, rendererLipatan, controlsLipatan;
+        let foldNetGroup;
+        let lipatanShape = 'balok'; // 'kubus' or 'balok'
+        let lipatanPattern = 0; // 0, 1, 2
+        let currentFoldValue = 0;
+        let isAutoFolding = false;
+        let foldAnimDirection = 1;
+
+        // Balok Dimensions
+        let balokP = 3.0, balokL = 2.0, balokT = 1.5;
+
+        function initLipatanScene() {
+            const container = document.getElementById('canvas-lipatan-container');
+            if (!container) return;
+
+            sceneLipatan = new THREE.Scene();
+            sceneLipatan.background = new THREE.Color(0x0f172a);
+
+            cameraLipatan = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            cameraLipatan.position.set(5, 4, 6);
+
+            rendererLipatan = new THREE.WebGLRenderer({ antialias: true });
+            rendererLipatan.setSize(container.clientWidth, container.clientHeight);
+            rendererLipatan.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(rendererLipatan.domElement);
+
+            controlsLipatan = new THREE.OrbitControls(cameraLipatan, rendererLipatan.domElement);
+            controlsLipatan.enableDamping = true;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            sceneLipatan.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            dirLight.position.set(6, 12, 8);
+            sceneLipatan.add(dirLight);
+
+            build3DFoldingNet();
+            animateLipatan();
+
+            window.addEventListener('resize', onWindowResizeLipatan);
+        }
+
+        function setLipatanShape(shape) {
+            lipatanShape = shape;
+            document.getElementById('lipatan-shape-kubus').className = shape === 'kubus' ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200';
+            document.getElementById('lipatan-shape-balok').className = shape === 'balok' ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-200';
+            document.getElementById('badge-lipatan-type').innerText = shape === 'kubus' ? 'KUBUS 3D' : 'BALOK 3D';
+            
+            document.getElementById('balok-dimensions-box').style.display = shape === 'balok' ? 'block' : 'none';
+
+            build3DFoldingNet();
+        }
+
+        function setLipatanPattern(index) {
+            lipatanPattern = index;
+            [0, 1, 2].forEach(i => {
+                const btn = document.getElementById(`pola-btn-${i}`);
+                if (btn) {
+                    btn.className = i === index ? 'pola-btn p-2.5 rounded-xl border border-rose-500 bg-rose-50 text-rose-700 font-bold text-xs transition' : 'pola-btn p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs transition hover:bg-slate-50';
+                }
+            });
+            build3DFoldingNet();
+        }
+
+        function updateBalokDimensions() {
+            balokP = parseFloat(document.getElementById('input-balok-p').value);
+            balokL = parseFloat(document.getElementById('input-balok-l').value);
+            balokT = parseFloat(document.getElementById('input-balok-t').value);
+
+            document.getElementById('balok-dim-label').innerText = `${balokP.toFixed(1)} x ${balokL.toFixed(1)} x ${balokT.toFixed(1)}`;
+            build3DFoldingNet();
+        }
+
+        function build3DFoldingNet() {
+            if (foldNetGroup) sceneLipatan.remove(foldNetGroup);
+            foldNetGroup = new THREE.Group();
+
+            const p = lipatanShape === 'kubus' ? 2.0 : balokP;
+            const l = lipatanShape === 'kubus' ? 2.0 : balokL;
+            const t = lipatanShape === 'kubus' ? 2.0 : balokT;
+
+            // Face Mesh Creation Helper with Text Canvas Labels
+            function createFace(w, d, title, colHex) {
+                const grp = new THREE.Group();
+                const geo = new THREE.PlaneGeometry(w, d);
+                geo.rotateX(-Math.PI / 2);
+
+                const mat = new THREE.MeshStandardMaterial({
+                    color: colHex,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.88,
+                    roughness: 0.3
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                grp.add(mesh);
+
+                const edges = new THREE.EdgesGeometry(geo);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
+                grp.add(line);
+
+                // Add Text Label Canvas Texture
+                const canvas = document.createElement('canvas');
+                canvas.width = 256; canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 256, 128);
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 28px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(title, 128, 48);
+                ctx.font = '20px Inter, sans-serif';
+                ctx.fillStyle = '#475569';
+                ctx.fillText(`${w.toFixed(1)} x ${d.toFixed(1)}`, 128, 88);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const labelGeo = new THREE.PlaneGeometry(w * 0.75, d * 0.75);
+                labelGeo.rotateX(-Math.PI / 2);
+                const labelMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
+                const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+                labelMesh.position.y = 0.01;
+                grp.add(labelMesh);
+
+                return grp;
+            }
+
+            // Colors: Base (Rose), Front (Sky), Back (Amber), Left (Emerald), Right (Purple), Top (Red)
+            const fBase = createFace(p, l, 'ALAS', 0xf43f5e);
+            fBase.position.set(0, 0, 0);
+            foldNetGroup.add(fBase);
+
+            // Pivot 1: Front Face (Attached at Z = +l/2)
+            const pFront = new THREE.Group();
+            pFront.position.set(0, 0, l / 2);
+            foldNetGroup.add(pFront);
+            const fFront = createFace(p, t, 'DEPAN', 0x0284c7);
+            fFront.position.set(0, 0, t / 2);
+            pFront.add(fFront);
+
+            // Pivot Top (Attached to top edge of Front Face)
+            const pTop = new THREE.Group();
+            pTop.position.set(0, 0, t);
+            pFront.add(pTop);
+            const fTop = createFace(p, l, 'TUTUP', 0xe11d48);
+            fTop.position.set(0, 0, l / 2);
+            pTop.add(fTop);
+
+            // Pivot 2: Back Face (Attached at Z = -l/2)
+            const pBack = new THREE.Group();
+            pBack.position.set(0, 0, -l / 2);
+            foldNetGroup.add(pBack);
+            const fBack = createFace(p, t, 'BELAKANG', 0xd97706);
+            fBack.position.set(0, 0, -t / 2);
+            pBack.add(fBack);
+
+            // Pivot 3: Left Face (Attached at X = -p/2)
+            const pLeft = new THREE.Group();
+            pLeft.position.set(-p / 2, 0, 0);
+            foldNetGroup.add(pLeft);
+            const fLeft = createFace(t, l, 'KIRI', 0x059669);
+            fLeft.position.set(-t / 2, 0, 0);
+            pLeft.add(fLeft);
+
+            // Pivot 4: Right Face (Attached at X = +p/2)
+            const pRight = new THREE.Group();
+            pRight.position.set(p / 2, 0, 0);
+            foldNetGroup.add(pRight);
+            const fRight = createFace(t, l, 'KANAN', 0x7c3aed);
+            fRight.position.set(t / 2, 0, 0);
+            pRight.add(fRight);
+
+            // Store References for Animated Angles
+            foldNetGroup.userData = { pFront, pBack, pLeft, pRight, pTop };
+
+            sceneLipatan.add(foldNetGroup);
+            applyFoldAngle(currentFoldValue);
+        }
+
+        function applyFoldAngle(percent) {
+            currentFoldValue = percent;
+            const angle = (percent / 100) * (Math.PI / 2);
+
+            if (foldNetGroup && foldNetGroup.userData.pFront) {
+                const { pFront, pBack, pLeft, pRight, pTop } = foldNetGroup.userData;
+                pFront.rotation.x = -angle;
+                pBack.rotation.x = angle;
+                pLeft.rotation.z = angle;
+                pRight.rotation.z = -angle;
+                pTop.rotation.x = -angle;
+            }
+
+            document.getElementById('fold-percent-label').innerText = `${percent}% ${percent === 100 ? '(Utuh)' : percent === 0 ? '(Datar)' : '(Melipat)'}`;
+        }
+
+        function onFoldSliderChange(val) {
+            isAutoFolding = false;
+            document.getElementById('btn-play-fold').innerHTML = '<i class="fa-solid fa-play"></i> Lipat Lambat';
+            applyFoldAngle(parseInt(val));
+        }
+
+        function toggleAutoFold() {
+            isAutoFolding = !isAutoFolding;
+            const btn = document.getElementById('btn-play-fold');
+            if (isAutoFolding) {
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i> Jeda Lipatan';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> Lipat Lambat';
+            }
+        }
+
+        function resetFold() {
+            isAutoFolding = false;
+            document.getElementById('btn-play-fold').innerHTML = '<i class="fa-solid fa-play"></i> Lipat Lambat';
+            document.getElementById('fold-slider').value = 0;
+            applyFoldAngle(0);
+        }
+
+        function animateLipatan() {
+            requestAnimationFrame(animateLipatan);
+
+            if (isAutoFolding) {
+                currentFoldValue += foldAnimDirection * 0.5;
+                if (currentFoldValue >= 100) {
+                    currentFoldValue = 100;
+                    foldAnimDirection = -1;
+                } else if (currentFoldValue <= 0) {
+                    currentFoldValue = 0;
+                    foldAnimDirection = 1;
+                }
+                document.getElementById('fold-slider').value = currentFoldValue;
+                applyFoldAngle(Math.round(currentFoldValue));
+            }
+
+            if (controlsLipatan) controlsLipatan.update();
+            if (rendererLipatan && sceneLipatan && cameraLipatan) rendererLipatan.render(sceneLipatan, cameraLipatan);
+        }
+
+        function onWindowResizeLipatan() {
+            const container = document.getElementById('canvas-lipatan-container');
+            if (!container || !rendererLipatan) return;
+            cameraLipatan.aspect = container.clientWidth / container.clientHeight;
+            cameraLipatan.updateProjectionMatrix();
+            rendererLipatan.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- 3. CALCULATOR FUNCTIONS (SUBTAB C) ---
+        function calculateKubus() {
+            const s = parseFloat(document.getElementById('calc-kubus-s').value) || 0;
+            const v = Math.pow(s, 3);
+            const lp = 6 * Math.pow(s, 2);
+            document.getElementById('res-kubus-box').innerHTML = `
+                <p class="text-amber-300 font-bold">Hasil Perhitungan Kubus:</p>
+                <p>Volume = ${s} x ${s} x ${s} = <strong>${v} cm³</strong></p>
+                <p>Luas Permukaan = 6 x (${s}²) = <strong>${lp} cm²</strong></p>
+            `;
+        }
+
+        function calculateBalok() {
+            const p = parseFloat(document.getElementById('calc-balok-p').value) || 0;
+            const l = parseFloat(document.getElementById('calc-balok-l').value) || 0;
+            const t = parseFloat(document.getElementById('calc-balok-t').value) || 0;
+            const v = p * l * t;
+            const lp = 2 * (p * l + p * t + l * t);
+            document.getElementById('res-balok-box').innerHTML = `
+                <p class="text-amber-300 font-bold">Hasil Perhitungan Balok:</p>
+                <p>Volume = ${p} x ${l} x ${t} = <strong>${v} cm³</strong></p>
+                <p>Luas Permukaan = 2 x (${p*l} + ${p*t} + ${l*t}) = <strong>${lp} cm²</strong></p>
+            `;
+        }
+
+        // --- 4. THREE.JS SCENE: KUBUS SATUAN 3D (SUBTAB D) ---
+        let sceneKubusSatuan, cameraKubusSatuan, rendererKubusSatuan, controlsKubusSatuan;
+        let unitCubeGroup;
+        let gapPercent = 0;
+
+        function initKubusSatuanScene() {
+            const container = document.getElementById('canvas-kubus-satuan-container');
+            if (!container) return;
+
+            sceneKubusSatuan = new THREE.Scene();
+            sceneKubusSatuan.background = new THREE.Color(0x0f172a);
+
+            cameraKubusSatuan = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            cameraKubusSatuan.position.set(6, 5, 7);
+
+            rendererKubusSatuan = new THREE.WebGLRenderer({ antialias: true });
+            rendererKubusSatuan.setSize(container.clientWidth, container.clientHeight);
+            rendererKubusSatuan.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(rendererKubusSatuan.domElement);
+
+            controlsKubusSatuan = new THREE.OrbitControls(cameraKubusSatuan, rendererKubusSatuan.domElement);
+            controlsKubusSatuan.enableDamping = true;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            sceneKubusSatuan.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            dirLight.position.set(5, 10, 7);
+            sceneKubusSatuan.add(dirLight);
+
+            updateUnitCubes();
+            animateKubusSatuan();
+
+            window.addEventListener('resize', onWindowResizeKubusSatuan);
+        }
+
+        function updateUnitCubes() {
+            if (unitCubeGroup) sceneKubusSatuan.remove(unitCubeGroup);
+            unitCubeGroup = new THREE.Group();
+
+            const p = parseInt(document.getElementById('unit-p').value);
+            const l = parseInt(document.getElementById('unit-l').value);
+            const t = parseInt(document.getElementById('unit-t').value);
+
+            document.getElementById('val-unit-p').innerText = p;
+            document.getElementById('val-unit-l').innerText = l;
+            document.getElementById('val-unit-t').innerText = t;
+            document.getElementById('total-unit-cubes-label').innerText = p * l * t;
+
+            const size = 0.8;
+            const step = size + (gapPercent / 100) * 0.4;
+
+            const offsetX = ((p - 1) * step) / 2;
+            const offsetY = ((t - 1) * step) / 2;
+            const offsetZ = ((l - 1) * step) / 2;
+
+            const boxGeo = new THREE.BoxGeometry(size, size, size);
+            const edgesGeo = new THREE.EdgesGeometry(boxGeo);
+
+            for (let x = 0; x < p; x++) {
+                for (let y = 0; y < t; y++) {
+                    for (let z = 0; z < l; z++) {
+                        const mat = new THREE.MeshStandardMaterial({
+                            color: 0xf43f5e,
+                            roughness: 0.3
+                        });
+                        const mesh = new THREE.Mesh(boxGeo, mat);
+                        mesh.position.set(x * step - offsetX, y * step - offsetY, z * step - offsetZ);
+
+                        const line = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({ color: 0xffffff }));
+                        mesh.add(line);
+
+                        unitCubeGroup.add(mesh);
+                    }
+                }
+            }
+
+            sceneKubusSatuan.add(unitCubeGroup);
+        }
+
+        function updateCubeGaps(val) {
+            gapPercent = parseInt(val);
+            document.getElementById('gap-percent-label').innerText = `${gapPercent}%`;
+            updateUnitCubes();
+        }
+
+        function animateKubusSatuan() {
+            requestAnimationFrame(animateKubusSatuan);
+            if (controlsKubusSatuan) controlsKubusSatuan.update();
+            if (rendererKubusSatuan && sceneKubusSatuan && cameraKubusSatuan) rendererKubusSatuan.render(sceneKubusSatuan, cameraKubusSatuan);
+        }
+
+        function onWindowResizeKubusSatuan() {
+            const container = document.getElementById('canvas-kubus-satuan-container');
+            if (!container || !rendererKubusSatuan) return;
+            cameraKubusSatuan.aspect = container.clientWidth / container.clientHeight;
+            cameraKubusSatuan.updateProjectionMatrix();
+            rendererKubusSatuan.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- 5. GRID MAP & ROUTE CALCULATOR (SUBTAB E) ---
+        function initGridMap() {
+            const container = document.getElementById('grid-map-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (let row = 7; row >= 0; row--) {
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `border border-rose-100 rounded flex items-center justify-center text-[10px] font-bold text-slate-400 relative transition`;
+                    cell.id = `cell-${col}-${row}`;
+                    
+                    if (col === 2 && row === 2) {
+                        cell.innerHTML = '<i class="fa-solid fa-house text-rose-600 text-lg"></i>';
+                        cell.classList.add('bg-rose-100');
+                    } else if (col === 6 && row === 6) {
+                        cell.innerHTML = '<i class="fa-solid fa-school text-sky-600 text-lg"></i>';
+                        cell.classList.add('bg-sky-100');
+                    } else if (col === 2 && row === 6) {
+                        cell.innerHTML = '<i class="fa-solid fa-tree text-emerald-600 text-lg"></i>';
+                        cell.classList.add('bg-emerald-100');
+                    } else if (col === 6 && row === 2) {
+                        cell.innerHTML = '<i class="fa-solid fa-store text-amber-600 text-lg"></i>';
+                        cell.classList.add('bg-amber-100');
+                    }
+
+                    container.appendChild(cell);
+                }
+            }
+            calculateRoutePath();
+        }
+
+        function calculateRoutePath() {
+            const locations = {
+                rumah: { x: 2, y: 2, name: 'Rumah' },
+                sekolah: { x: 6, y: 6, name: 'Sekolah' },
+                taman: { x: 2, y: 6, name: 'Taman' },
+                toko: { x: 6, y: 2, name: 'Toko' }
+            };
+
+            const startKey = document.getElementById('select-start-pos').value;
+            const endKey = document.getElementById('select-end-pos').value;
+
+            const pStart = locations[startKey];
+            const pEnd = locations[endKey];
+
+            const dx = pEnd.x - pStart.x;
+            const dy = pEnd.y - pStart.y;
+            const totalSteps = Math.abs(dx) + Math.abs(dy);
+
+            const dirX = dx >= 0 ? 'Kanan (Timur)' : 'Kiri (Barat)';
+            const dirY = dy >= 0 ? 'Atas (Utara)' : 'Bawah (Selatan)';
+
+            document.getElementById('route-steps-desc').innerHTML = `
+                Dari <strong>${pStart.name} (${pStart.x}, ${pStart.y})</strong> menuju <strong>${pEnd.name} (${pEnd.x}, ${pEnd.y})</strong>:<br>
+                • Langkah Horisontal: ${Math.abs(dx)} petak ke ${dirX}<br>
+                • Langkah Vertikal: ${Math.abs(dy)} petak ke ${dirY}<br>
+                <strong class="text-rose-700">Total Jarak Perjalanan = ${totalSteps} Langkah Petak.</strong>
+            `;
+        }
+
+        // --- 6. GAME 4 PEMAIN COMPETITION ENGINE ---
+        let gameScores = [0, 0, 0, 0];
+        let currentQuestionIdx = 0;
+
+        const gameQuestions = [
+            {
+                q: "Berapakah jumlah rusuk pada bangun ruang Kubus maupun Balok?",
+                options: ["8 Rusuk", "10 Rusuk", "12 Rusuk", "16 Rusuk"],
+                ans: 2
+            },
+            {
+                q: "Berapakah jumlah bidang sisi pada sebuah Balok?",
+                options: ["4 Sisi", "6 Sisi", "8 Sisi", "12 Sisi"],
+                ans: 1
+            },
+            {
+                q: "Rumus untuk mencari Volume Balok dengan Panjang (p), Lebar (l), dan Tinggi (t) adalah...",
+                options: ["p + l + t", "p x l x t", "2 x (p + l)", "p x l / t"],
+                ans: 1
+            },
+            {
+                q: "Jika panjang sisi sebuah Kubus adalah 3 cm, berapakah volumenya?",
+                options: ["9 cm³", "18 cm³", "27 cm³", "36 cm³"],
+                ans: 2
+            },
+            {
+                q: "Pasangan sisi yang sejajar dan kongruen pada balok berjumlah...",
+                options: ["2 Pasang", "3 Pasang", "4 Pasang", "6 Pasang"],
+                ans: 1
+            }
+        ];
+
+        function startNewGame4P() {
+            gameScores = [0, 0, 0, 0];
+            currentQuestionIdx = 0;
+            updateScoresDisplay();
+            renderGameQuestion();
+        }
+
+        function updateScoresDisplay() {
+            document.getElementById('score-p1').innerText = gameScores[0];
+            document.getElementById('score-p2').innerText = gameScores[1];
+            document.getElementById('score-p3').innerText = gameScores[2];
+            document.getElementById('score-p4').innerText = gameScores[3];
+        }
+
+        function renderGameQuestion() {
+            const qData = gameQuestions[currentQuestionIdx];
+            document.getElementById('game-q-number').innerText = `Soal ${currentQuestionIdx + 1} / ${gameQuestions.length}`;
+            document.getElementById('game-q-text').innerText = qData.q;
+
+            const playerBoxes = ['p1-answers-box', 'p2-answers-box', 'p3-answers-box', 'p4-answers-box'];
+
+            playerBoxes.forEach((boxId, pIdx) => {
+                const box = document.getElementById(boxId);
+                box.innerHTML = '';
+                qData.options.forEach((opt, oIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'p-2 rounded-xl text-xs font-bold transition border border-slate-300 hover:bg-white shadow-sm text-slate-800 flex items-center justify-center text-center';
+                    btn.innerText = opt;
+                    btn.onclick = () => handleGameAnswer(pIdx, oIdx);
+                    box.appendChild(btn);
+                });
+            });
+        }
+
+        function handleGameAnswer(playerIdx, chosenOptIdx) {
+            const qData = gameQuestions[currentQuestionIdx];
+            if (chosenOptIdx === qData.ans) {
+                gameScores[playerIdx] += 10;
+                updateScoresDisplay();
+                if (currentQuestionIdx < gameQuestions.length - 1) {
+                    currentQuestionIdx++;
+                    renderGameQuestion();
+                } else {
+                    const maxScore = Math.max(...gameScores);
+                    const winnerIdx = gameScores.indexOf(maxScore) + 1;
+                    document.getElementById('game-question-box').innerHTML = `
+                        <h3 class="text-2xl font-bold text-amber-300 animate-bounce">🏆 Pemain ${winnerIdx} Menang!</h3>
+                        <p class="text-sm">Selamat! Skor Tertinggi: ${maxScore} Poin.</p>
+                    `;
+                }
+            } else {
+                gameScores[playerIdx] = Math.max(0, gameScores[playerIdx] - 5);
+                updateScoresDisplay();
+            }
+        }
+
+        // --- 7. KUIS SYSTEM ---
+        const quizQuestionsData = [
+            { q: "1. Jumlah titik sudut pada bangun ruang kubus adalah...", options: ["6", "8", "12", "16"], ans: 1 },
+            { q: "2. Bidang sisi balok yang berhadapan memiliki bentuk dan ukuran yang...", options: ["Beda", "Kongruen (Sama)", "Tegak Lurus", "Acak"], ans: 1 },
+            { q: "3. Rumus Luas Permukaan Kubus adalah...", options: ["s x s", "4 x s²", "6 x s²", "s³"], ans: 2 },
+            { q: "4. Sebuah balok memiliki p=5cm, l=3cm, t=2cm. Volumenya adalah...", options: ["10 cm³", "15 cm³", "30 cm³", "60 cm³"], ans: 2 },
+            { q: "5. Jaring-jaring kubus terdiri dari berapa banyak persegi?", options: ["4", "5", "6", "8"], ans: 2 }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            quizQuestionsData.forEach((item, qIdx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-rose-50/50 p-4 rounded-xl border border-rose-100 space-y-3';
+                card.innerHTML = `<p class="font-bold text-slate-800 text-sm">${item.q}</p>`;
+
+                const optsDiv = document.createElement('div');
+                optsDiv.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2';
+
+                item.options.forEach((opt, oIdx) => {
+                    optsDiv.innerHTML += `
+                        <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200 cursor-pointer text-xs hover:border-rose-400 transition">
+                            <input type="radio" name="quiz-q-${qIdx}" value="${oIdx}" class="accent-rose-600">
+                            <span>${opt}</span>
+                        </label>
+                    `;
+                });
+
+                card.appendChild(optsDiv);
+                container.appendChild(card);
+            });
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            quizQuestionsData.forEach((item, qIdx) => {
+                const selected = document.querySelector(`input[name="quiz-q-${qIdx}"]:checked`);
+                if (selected && parseInt(selected.value) === item.ans) {
+                    score += 20;
+                }
+            });
+
+            const modal = document.getElementById('quiz-result-modal');
+            modal.classList.remove('hidden');
+            document.getElementById('quiz-score-text').innerText = `Skor Kamu: ${score} / 100`;
+        }
+
+        function resetQuiz() {
+            document.getElementById('quiz-result-modal').classList.add('hidden');
+            renderQuiz();
+        }
+
+        function saveReflection(e) {
+            e.preventDefault();
+            const feeling = document.querySelector('input[name="feeling"]:checked').value;
+            const notes = document.getElementById('refl-notes').value;
+
+            document.getElementById('reflection-summary').classList.remove('hidden');
+            document.getElementById('saved-refl-text').innerHTML = `
+                Perasaan Belajar: <strong>${feeling}</strong><br>
+                Catatan: <em>"${notes || 'Tidak ada catatan khusus.'}"</em>
+            `;
+        }
+
+        // --- INITIALIZATION ON PAGE LOAD ---
+        window.onload = function () {
+            initUnsurScene();
+            initLipatanScene();
+            initKubusSatuanScene();
+            initGridMap();
+            startNewGame4P();
+            renderQuiz();
+            calculateKubus();
+            calculateBalok();
+        };
+    </script>
+</body>
+</html>
